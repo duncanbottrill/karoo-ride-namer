@@ -1,0 +1,11 @@
+# Copy this file to `local.properties` and fill in the values.
+# `local.properties` is git-ignored.
+
+# Path to your Android SDK (Android Studio sets this automatically).
+sdk.dir=/Users/you/Library/Android/sdk
+
+# karoo-ext is hosted on GitHub Packages, which needs a GitHub login even for
+# public packages. Create a classic Personal Access Token with the `read:packages`
+# scope at https://github.com/settings/tokens and put it here:
+gpr.user=your-github-username
+gpr.key=ghp_your_personal_access_token

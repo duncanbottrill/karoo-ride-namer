@@ -1,0 +1,4 @@
+<resources>
+    <!-- Compose hosts its own MaterialTheme; the activity just needs a no-action-bar theme. -->
+    <style name="Theme.RideNamer" parent="android:Theme.Material.NoActionBar" />
+</resources>

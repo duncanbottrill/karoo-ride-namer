@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Ride Namer doesn't publish any custom in-ride data fields, so this declares no
+  <DataType> children. The ExtensionInfo entry is still required so the Karoo
+  system registers the extension and keeps the service alive to observe rides.
+-->
+<ExtensionInfo
+    id="ridenamer"
+    displayName="@string/extension_name"
+    icon="@drawable/ic_launcher"
+    scansDevices="false" />

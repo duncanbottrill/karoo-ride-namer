@@ -1,0 +1,29 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.82"
+        android:scaleY="0.82"
+        android:pivotX="54"
+        android:pivotY="54">
+        <!-- speech bubble -->
+        <path
+            android:fillColor="#FF5A1F"
+            android:pathData="M30,28h48a8,8 0 0 1 8,8v28a8,8 0 0 1 -8,8h-26l-12,12v-12h-2a8,8 0 0 1 -8,-8v-28a8,8 0 0 1 8,-8z" />
+        <!-- two wheels (cut-outs, same as the dark background) -->
+        <path
+            android:fillColor="#1B1B1F"
+            android:pathData="M44,52m-7,0a7,7 0 1,0 14,0a7,7 0 1,0 -14,0" />
+        <path
+            android:fillColor="#1B1B1F"
+            android:pathData="M68,52m-7,0a7,7 0 1,0 14,0a7,7 0 1,0 -14,0" />
+        <path
+            android:fillColor="#FF5A1F"
+            android:pathData="M44,52m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+        <path
+            android:fillColor="#FF5A1F"
+            android:pathData="M68,52m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+    </group>
+</vector>
