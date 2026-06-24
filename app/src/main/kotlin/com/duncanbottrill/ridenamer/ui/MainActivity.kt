@@ -26,6 +26,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         store = RideNamerStore(applicationContext)
+        importCredentialExtras(intent)
         handleDeepLink(intent)
         setContent {
             RideNamerApp(
@@ -38,7 +39,34 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        importCredentialExtras(intent)
         handleDeepLink(intent)
+    }
+
+    /**
+     * Imports Strava credentials passed as intent extras, so they can be set from a computer
+     * over ADB instead of typed on the Karoo, e.g.:
+     *
+     *   adb shell am start -n com.duncanbottrill.ridenamer/.ui.MainActivity \
+     *     -e strava_client_id 12345 \
+     *     -e strava_client_secret <secret> \
+     *     -e strava_connect true        # optional: also start authorization
+     */
+    private fun importCredentialExtras(intent: Intent?) {
+        val id = intent?.getStringExtra("strava_client_id")?.trim()
+        val secret = intent?.getStringExtra("strava_client_secret")?.trim()
+        if (id.isNullOrBlank() && secret.isNullOrBlank()) return
+        val autoConnect = intent?.getBooleanExtra("strava_connect", false) == true
+        ioScope.launch {
+            val creds = store.stravaCredentials.first()
+            val newId = id?.takeIf { it.isNotBlank() } ?: creds.clientId
+            val newSecret = secret?.takeIf { it.isNotBlank() } ?: creds.clientSecret
+            store.setStravaCredentials(creds.copy(clientId = newId, clientSecret = newSecret))
+            statusMessage.value = "Strava credentials imported."
+            if (autoConnect && newId.isNotBlank() && newSecret.isNotBlank()) {
+                launchStravaAuth(newId, newSecret)
+            }
+        }
     }
 
     /** Saves credentials then opens the Strava authorize page in the browser. */

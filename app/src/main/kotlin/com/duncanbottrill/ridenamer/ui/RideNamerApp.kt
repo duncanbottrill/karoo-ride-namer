@@ -195,7 +195,8 @@ private fun StravaCard(
             } else {
                 Text(
                     "Create a Strava API app at strava.com/settings/api, set the Authorization Callback Domain to " +
-                        "\"strava-callback\", then paste the Client ID and Secret below.",
+                        "\"strava-callback\", then enter the Client ID and Secret below. To avoid typing the long " +
+                        "secret on the Karoo, you can push them over ADB instead (see the README).",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

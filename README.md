@@ -89,9 +89,24 @@ application:
 
 1. Go to <https://www.strava.com/settings/api> and create an app.
    - Set **Authorization Callback Domain** to `strava-callback`.
-2. In Ride Namer's screen, paste the **Client ID** and **Client Secret** and tap
+2. In Ride Namer's screen, enter the **Client ID** and **Client Secret** and tap
    **Connect Strava**. Approve the `activity:write` scope in the browser; it redirects back
    into the app (`ridenamer://strava-callback`).
+
+   **Tip — avoid typing the secret on the Karoo.** Push the credentials from your computer
+   over ADB instead (you can copy-paste them there), optionally kicking off authorization in
+   one go:
+
+   ```bash
+   adb shell am start -n com.duncanbottrill.ridenamer/.ui.MainActivity \
+     -e strava_client_id 12345 \
+     -e strava_client_secret <your-client-secret> \
+     -e strava_connect true
+   ```
+
+   The app imports the values; with `strava_connect true` it also opens the Strava
+   authorization page so you just approve. (The secret is visible in your shell history and
+   logcat with this method — fine for a personal app; clear your history if you care.)
 3. From then on, finished rides are queued for rename. Because the Karoo uploads to Strava
    a little after a ride ends, the rename is **retried automatically** until the activity
    appears (and you can tap **Sync now** to force it). Matching is by start time within a
