@@ -11,7 +11,7 @@ import com.duncanbottrill.ridenamer.karoo.streamLocation
 import com.duncanbottrill.ridenamer.karoo.streamRideState
 import com.duncanbottrill.ridenamer.model.RideStats
 import com.duncanbottrill.ridenamer.model.WeatherSnapshot
-import com.duncanbottrill.ridenamer.name.RideNameGenerator
+import com.duncanbottrill.ridenamer.name.generateRideName
 import com.duncanbottrill.ridenamer.strava.StravaClient
 import com.duncanbottrill.ridenamer.strava.karooHttpEngine
 import com.duncanbottrill.ridenamer.weather.WeatherClient
@@ -105,8 +105,9 @@ class RideNamerExtension : KarooExtension("ridenamer", BuildConfig.VERSION_NAME)
         }
 
         val stats = live.toStats(System.currentTimeMillis())
-        val name = RideNameGenerator.generate(stats, seed = stats.endEpochMs)
-        Log.i(TAG, "Generated name: $name")
+        val style = store.nameStyle.first()
+        val name = generateRideName(stats, style, seed = stats.endEpochMs)
+        Log.i(TAG, "Generated name ($style): $name")
 
         val connected = store.stravaCredentials.first().isConnected
         val status = if (connected) StravaStatus.PENDING else StravaStatus.NOT_CONFIGURED

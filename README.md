@@ -31,9 +31,11 @@ The app is a Karoo extension (a background Android service built on the
 3. **When the ride ends**, it reverse-geocodes the ride's midpoint into a place name via
    [BigDataCloud](https://www.bigdatacloud.com) (free, no API key; skipped gracefully if
    offline), classifies the ride into buckets (how long / hilly / hard / hot / windy / what
-   time of day / where), and runs the **offline name generator**, which stitches a name from
-   curated word banks using weighted, ride-appropriate templates — sometimes leaning on the
-   place for context (*“Tour de Snowdonia”*). The generator itself uses no network or AI.
+   time of day / where), and runs the **offline name generator**. Two styles are available
+   (pick one in the app): **Funny** — silly, random names from curated word banks
+   (*“Tour de Snowdonia”*); and **Descriptive** — a plain summary of place, distance, effort
+   and weather (*“Morning hard 64 km hilly ride around Box Hill in the rain”*). The generator
+   uses no network or AI.
 4. **Shows a notification** with the name, saves it to the in-app **history**, and — if
    Strava is connected — **queues a rename** that's applied once the Karoo uploads the
    activity to Strava.

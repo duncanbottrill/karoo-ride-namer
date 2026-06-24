@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.duncanbottrill.ridenamer.name.NameStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -25,6 +26,17 @@ class RideNamerStore(private val context: Context) {
     private val keyHistory = stringPreferencesKey("history")
     private val keyPending = stringPreferencesKey("pending_renames")
     private val keyStrava = stringPreferencesKey("strava_credentials")
+    private val keyNameStyle = stringPreferencesKey("name_style")
+
+    // --- Name style ---
+
+    val nameStyle: Flow<NameStyle> = context.dataStore.data.map { prefs ->
+        NameStyle.fromName(prefs[keyNameStyle])
+    }
+
+    suspend fun setNameStyle(style: NameStyle) {
+        context.dataStore.edit { it[keyNameStyle] = style.name }
+    }
 
     // --- History ---
 

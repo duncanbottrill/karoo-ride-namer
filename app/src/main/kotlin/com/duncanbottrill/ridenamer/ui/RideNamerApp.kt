@@ -37,7 +37,9 @@ import com.duncanbottrill.ridenamer.data.HistoryEntry
 import com.duncanbottrill.ridenamer.data.RideNamerStore
 import com.duncanbottrill.ridenamer.data.StravaCredentials
 import com.duncanbottrill.ridenamer.data.StravaStatus
-import com.duncanbottrill.ridenamer.name.RideNameGenerator
+import com.duncanbottrill.ridenamer.name.NameStyle
+import com.duncanbottrill.ridenamer.name.SAMPLE_RIDE_STATS
+import com.duncanbottrill.ridenamer.name.generateRideName
 import com.duncanbottrill.ridenamer.strava.StravaClient
 import com.duncanbottrill.ridenamer.strava.directHttpEngine
 import kotlinx.coroutines.Dispatchers
@@ -59,13 +61,20 @@ fun RideNamerApp(
             Scaffold { padding ->
                 val history by store.history.collectAsState(initial = emptyList())
                 val creds by store.stravaCredentials.collectAsState(initial = StravaCredentials())
+                val style by store.nameStyle.collectAsState(initial = NameStyle.FUNNY)
+                val scope = rememberCoroutineScope()
 
                 LazyColumn(
                     modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     item { Header() }
-                    item { DemoCard() }
+                    item {
+                        StyleCard(current = style, onSelect = { picked ->
+                            scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
+                        })
+                    }
+                    item { DemoCard(style) }
                     item { StravaCard(store, creds, statusMessage, onConnectStrava) }
                     item {
                         Text(
@@ -104,8 +113,34 @@ private fun Header() {
 }
 
 @Composable
-private fun DemoCard() {
-    var sample by remember { mutableStateOf(RideNameGenerator.preview()) }
+private fun StyleCard(current: NameStyle, onSelect: (NameStyle) -> Unit) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Name style", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NameStyle.entries.forEach { option ->
+                    val selected = option == current
+                    val modifier = Modifier.weight(1f)
+                    if (selected) {
+                        Button(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
+                    } else {
+                        OutlinedButton(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
+                    }
+                }
+            }
+            Text(
+                current.blurb,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+@Composable
+private fun DemoCard(style: NameStyle) {
+    var seed by remember { mutableStateOf(System.nanoTime()) }
+    val sample = remember(style, seed) { generateRideName(SAMPLE_RIDE_STATS, style, seed) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Sample", style = MaterialTheme.typography.labelMedium, color = Accent)
@@ -117,7 +152,7 @@ private fun DemoCard() {
                 modifier = Modifier.fillMaxWidth(),
             )
             Button(
-                onClick = { sample = RideNameGenerator.preview() },
+                onClick = { seed = System.nanoTime() },
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Shuffle 🎲") }
         }
