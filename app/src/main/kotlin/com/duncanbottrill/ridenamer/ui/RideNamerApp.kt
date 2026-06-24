@@ -14,7 +14,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -54,7 +53,7 @@ private val Accent = Color(0xFFFF5A1F)
 fun RideNamerApp(
     store: RideNamerStore,
     statusMessage: MutableState<String?>,
-    onConnectStrava: (clientId: String, clientSecret: String) -> Unit,
+    onConnectStrava: () -> Unit,
 ) {
     MaterialTheme(colorScheme = darkColorScheme(primary = Accent)) {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -164,7 +163,7 @@ private fun StravaCard(
     store: RideNamerStore,
     creds: StravaCredentials,
     statusMessage: MutableState<String?>,
-    onConnectStrava: (String, String) -> Unit,
+    onConnectStrava: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -194,33 +193,15 @@ private fun StravaCard(
                 }
             } else {
                 Text(
-                    "Create a Strava API app at strava.com/settings/api, set the Authorization Callback Domain to " +
-                        "\"strava-callback\", then enter the Client ID and Secret below. To avoid typing the long " +
-                        "secret on the Karoo, you can push them over ADB instead (see the README).",
+                    "Connect your Strava account so finished rides get renamed automatically once " +
+                        "they sync. Tapping below opens Strava to approve access.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                var clientId by remember(creds.clientId) { mutableStateOf(creds.clientId) }
-                var clientSecret by remember(creds.clientSecret) { mutableStateOf(creds.clientSecret) }
-                OutlinedTextField(
-                    value = clientId,
-                    onValueChange = { clientId = it },
-                    label = { Text("Client ID") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = clientSecret,
-                    onValueChange = { clientSecret = it },
-                    label = { Text("Client Secret") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
                 Button(
-                    onClick = { onConnectStrava(clientId, clientSecret) },
-                    enabled = clientId.isNotBlank() && clientSecret.isNotBlank(),
+                    onClick = onConnectStrava,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text("Connect Strava") }
+                ) { Text("Connect with Strava") }
             }
         }
     }

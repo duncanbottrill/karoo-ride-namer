@@ -23,15 +23,15 @@ data class PendingRename(
     val attempts: Int = 0,
 )
 
-/** Strava OAuth credentials + tokens. clientId/clientSecret come from the user's Strava API app. */
+/**
+ * Strava tokens stored on-device after authorization. The client id/secret are NOT here —
+ * they live only in the backend (see `/backend`), so the app never holds the secret.
+ */
 @Serializable
 data class StravaCredentials(
-    val clientId: String = "",
-    val clientSecret: String = "",
     val refreshToken: String = "",
     val accessToken: String = "",
     val accessTokenExpiresAtSec: Long = 0L,
 ) {
-    val isConfigured: Boolean get() = clientId.isNotBlank() && clientSecret.isNotBlank()
-    val isConnected: Boolean get() = isConfigured && refreshToken.isNotBlank()
+    val isConnected: Boolean get() = refreshToken.isNotBlank()
 }

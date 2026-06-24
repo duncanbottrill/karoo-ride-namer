@@ -84,33 +84,26 @@ runs in the background; just ride.
 
 ## Strava auto-rename (optional)
 
-Renaming the Strava activity needs a one-time setup because Strava requires your own API
-application:
+Renaming the Strava activity uses your own Strava API app, with the **client secret held in
+a small backend** (see [`backend/`](backend/)) so it never ships inside the APK. In the app
+it's then a one-tap **Connect with Strava** — no credentials to type on the Karoo.
 
-1. Go to <https://www.strava.com/settings/api> and create an app.
-   - Set **Authorization Callback Domain** to `strava-callback`.
-2. In Ride Namer's screen, enter the **Client ID** and **Client Secret** and tap
-   **Connect Strava**. Approve the `activity:write` scope in the browser; it redirects back
-   into the app (`ridenamer://strava-callback`).
+One-time setup:
 
-   **Tip — avoid typing the secret on the Karoo.** Push the credentials from your computer
-   over ADB instead (you can copy-paste them there), optionally kicking off authorization in
-   one go:
+1. Deploy the backend and set its `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` env vars —
+   see [backend/README.md](backend/README.md). (Create the Strava API app at
+   <https://www.strava.com/settings/api> with **Authorization Callback Domain** = `strava-callback`.)
+2. Put your backend's URL in
+   [`StravaConfig.kt`](app/src/main/kotlin/com/duncanbottrill/ridenamer/strava/StravaConfig.kt)
+   (`STRAVA_BACKEND_URL`) and build/release the app.
+3. In Ride Namer, tap **Connect with Strava** → approve in the browser → it redirects back
+   (`ridenamer://strava-callback`) and shows "Strava connected ✓". The app sends the OAuth
+   code to the backend, which does the secret-requiring exchange and returns only the tokens.
 
-   ```bash
-   adb shell am start -n com.duncanbottrill.ridenamer/.ui.MainActivity \
-     -e strava_client_id 12345 \
-     -e strava_client_secret <your-client-secret> \
-     -e strava_connect true
-   ```
-
-   The app imports the values; with `strava_connect true` it also opens the Strava
-   authorization page so you just approve. (The secret is visible in your shell history and
-   logcat with this method — fine for a personal app; clear your history if you care.)
-3. From then on, finished rides are queued for rename. Because the Karoo uploads to Strava
-   a little after a ride ends, the rename is **retried automatically** until the activity
-   appears (and you can tap **Sync now** to force it). Matching is by start time within a
-   10-minute window, picking the closest cycling activity.
+From then on, finished rides are queued for rename. Because the Karoo uploads to Strava a
+little after a ride ends, the rename is retried until the activity appears (and you can tap
+**Sync now** to force it). Matching is by start time within a 10-minute window, picking the
+closest cycling activity.
 
 ## Notes & assumptions
 
@@ -121,8 +114,9 @@ application:
 - **No custom data fields:** the extension doesn't add in-ride screens — it only reacts to
   the end of a ride. `extension_info.xml` therefore declares no `<DataType>`s.
 - **Privacy:** your ride-start coordinates are sent to Open-Meteo (weather) and the ride's
-  midpoint coordinates to BigDataCloud (place name); Strava calls go to Strava. Nothing else
-  leaves the device. Credentials/tokens are stored locally via DataStore.
+  midpoint coordinates to BigDataCloud (place name); Strava API calls go to Strava; the OAuth
+  code/refresh token pass through your own backend (which holds the Strava secret). Tokens are
+  stored locally via DataStore; the client secret is never on the device.
 
 ## Tests
 
