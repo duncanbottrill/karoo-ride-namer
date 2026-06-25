@@ -13,8 +13,24 @@ android {
         applicationId = "com.duncanbottrill.ridenamer"
         minSdk = 26
         targetSdk = 35
-        versionCode = 8
-        versionName = "1.7"
+        versionCode = 9
+        versionName = "1.8"
+    }
+
+    // Stable release signing from CI secrets, so every release shares one signing identity
+    // and the app updates in place (no uninstall needed). Absent locally → release is unsigned.
+    val keystoreBase64 = System.getenv("KEYSTORE_BASE64")
+    signingConfigs {
+        if (!keystoreBase64.isNullOrBlank()) {
+            create("release") {
+                val keystoreFile = File.createTempFile("ridenamer-keystore", ".jks")
+                keystoreFile.writeBytes(java.util.Base64.getDecoder().decode(keystoreBase64))
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -22,6 +38,9 @@ android {
             isMinifyEnabled = false
         }
         release {
+            if (!keystoreBase64.isNullOrBlank()) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
