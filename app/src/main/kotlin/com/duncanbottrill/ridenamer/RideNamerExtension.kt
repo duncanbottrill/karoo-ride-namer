@@ -12,8 +12,7 @@ import com.duncanbottrill.ridenamer.karoo.streamRideState
 import com.duncanbottrill.ridenamer.model.RideStats
 import com.duncanbottrill.ridenamer.model.WeatherSnapshot
 import com.duncanbottrill.ridenamer.name.generateRideName
-import com.duncanbottrill.ridenamer.strava.StravaClient
-import com.duncanbottrill.ridenamer.strava.karooHttpEngine
+import com.duncanbottrill.ridenamer.strava.StravaRenameWorker
 import com.duncanbottrill.ridenamer.weather.WeatherClient
 import io.hammerhead.karooext.KarooSystemService
 import io.hammerhead.karooext.extension.KarooExtension
@@ -27,7 +26,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -56,7 +54,8 @@ class RideNamerExtension : KarooExtension("ridenamer", BuildConfig.VERSION_NAME)
         karoo = KarooSystemService(applicationContext)
         karoo.connect { connected -> Log.i(TAG, "Karoo connected: $connected") }
         scope.launch { monitorRideState() }
-        scope.launch { retryStravaLoop() }
+        // Catch up on any renames still pending from a previous session.
+        StravaRenameWorker.schedule(applicationContext)
     }
 
     override fun onDestroy() {
@@ -116,7 +115,9 @@ class RideNamerExtension : KarooExtension("ridenamer", BuildConfig.VERSION_NAME)
 
         if (connected) {
             store.addPendingRename(PendingRename(name, stats.startEpochMs, stats.endEpochMs))
-            processStrava()
+            // WorkManager retries in the background (with backoff, only when online) until the
+            // ride has uploaded to Strava and been renamed — survives the app being killed.
+            StravaRenameWorker.schedule(applicationContext)
         }
     }
 
@@ -158,19 +159,6 @@ class RideNamerExtension : KarooExtension("ridenamer", BuildConfig.VERSION_NAME)
         WeatherClient(karoo).fetch(loc.lat, loc.lng)?.let {
             live.weather = it
             Log.i(TAG, "Weather captured: ${it.temperatureC}C code=${it.weatherCode}")
-        }
-    }
-
-    private suspend fun processStrava() {
-        val client = StravaClient(store, karooHttpEngine(karoo))
-        val result = runCatching { client.processPending() }.getOrNull() ?: return
-        result.applied.forEach { store.updateHistoryStatus(it.rideEndEpochMs, StravaStatus.APPLIED) }
-    }
-
-    private suspend fun retryStravaLoop() {
-        while (true) {
-            delay(2 * 60 * 1000L)
-            if (store.pendingRenames.first().isNotEmpty()) processStrava()
         }
     }
 

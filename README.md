@@ -85,25 +85,29 @@ runs in the background; just ride.
 ## Strava auto-rename (optional)
 
 Renaming the Strava activity uses your own Strava API app, with the **client secret held in
-a small backend** (see [`backend/`](backend/)) so it never ships inside the APK. In the app
-it's then a one-tap **Connect with Strava** — no credentials to type on the Karoo.
+a small backend** (see [`backend/`](backend/)) so it never ships inside the APK. The Karoo's
+own browser can't log in to Strava, so connecting is done by **scanning a QR code with your
+phone**.
 
 One-time setup:
 
-1. Deploy the backend and set its `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` env vars —
-   see [backend/README.md](backend/README.md). (Create the Strava API app at
-   <https://www.strava.com/settings/api> with **Authorization Callback Domain** = `strava-callback`.)
+1. Deploy the backend and set its `STRAVA_CLIENT_ID` / `STRAVA_CLIENT_SECRET` env vars, and
+   add a Redis (KV) store — see [backend/README.md](backend/README.md). (Create the Strava
+   API app at <https://www.strava.com/settings/api> with **Authorization Callback Domain**
+   set to your backend's host, e.g. `your-backend.vercel.app`.)
 2. Put your backend's URL in
    [`StravaConfig.kt`](app/src/main/kotlin/com/duncanbottrill/ridenamer/strava/StravaConfig.kt)
    (`STRAVA_BACKEND_URL`) and build/release the app.
-3. In Ride Namer, tap **Connect with Strava** → approve in the browser → it redirects back
-   (`ridenamer://strava-callback`) and shows "Strava connected ✓". The app sends the OAuth
-   code to the backend, which does the secret-requiring exchange and returns only the tokens.
+3. In Ride Namer, tap **Connect with Strava** → a QR code appears → **scan it with your
+   phone** → log in + Authorize on the phone. The backend exchanges the code (secret stays
+   server-side), stashes the tokens in Redis keyed by a session id, and the Karoo — polling
+   in the background — picks them up and shows "Strava connected ✓".
 
-From then on, finished rides are queued for rename. Because the Karoo uploads to Strava a
-little after a ride ends, the rename is retried until the activity appears (and you can tap
-**Sync now** to force it). Matching is by start time within a 10-minute window, picking the
-closest cycling activity.
+After that it's **fully automatic**: when a ride ends, the name is queued and a WorkManager
+job renames the Strava activity once it has uploaded — retrying with backoff (only when
+online), surviving the app being closed. Matching is by start time within a 10-minute
+window, picking the closest cycling activity. (A manual **Sync now** button is still there
+if you ever want to force it.)
 
 ## Notes & assumptions
 
