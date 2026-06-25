@@ -22,7 +22,9 @@ class StravaClient(
 ) {
     companion object {
         private const val TAG = "RideNamer/Strava"
-        const val REDIRECT_URI = "ridenamer://strava-callback"
+        // Strava only allows real https domains as the redirect, so we point at the
+        // backend, which bounces back to the app's ridenamer://strava-callback scheme.
+        val REDIRECT_URI = "$STRAVA_BACKEND_URL/api/callback"
         private const val API_BASE = "https://www.strava.com/api/v3"
         private const val START_MATCH_TOLERANCE_SEC = 600L
     }
