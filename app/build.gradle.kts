@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -24,7 +26,7 @@ android {
         if (!keystoreBase64.isNullOrBlank()) {
             create("release") {
                 val keystoreFile = File.createTempFile("ridenamer-keystore", ".jks")
-                keystoreFile.writeBytes(java.util.Base64.getDecoder().decode(keystoreBase64!!))
+                keystoreFile.writeBytes(Base64.getDecoder().decode(keystoreBase64!!))
                 storeFile = keystoreFile
                 storePassword = System.getenv("KEYSTORE_PASSWORD")
                 keyAlias = System.getenv("KEY_ALIAS")
