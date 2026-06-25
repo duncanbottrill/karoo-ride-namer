@@ -116,15 +116,13 @@ private fun StyleCard(current: NameStyle, onSelect: (NameStyle) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Name style", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                NameStyle.entries.forEach { option ->
-                    val selected = option == current
-                    val modifier = Modifier.weight(1f)
-                    if (selected) {
-                        Button(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
-                    } else {
-                        OutlinedButton(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
-                    }
+            NameStyle.entries.forEach { option ->
+                val selected = option == current
+                val modifier = Modifier.fillMaxWidth()
+                if (selected) {
+                    Button(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
+                } else {
+                    OutlinedButton(onClick = { onSelect(option) }, modifier = modifier) { Text(option.label) }
                 }
             }
             Text(
