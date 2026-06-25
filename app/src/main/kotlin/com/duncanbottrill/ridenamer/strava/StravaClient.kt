@@ -31,8 +31,11 @@ class StravaClient(
 
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = false }
 
-    /** Fetches the public client id from the backend and builds the Strava authorize URL. */
-    suspend fun authorizeUrl(): String? {
+    /**
+     * Fetches the public client id from the backend and builds the Strava authorize URL,
+     * tagged with [state] so the backend can stash the resulting tokens for this session.
+     */
+    suspend fun authorizeUrl(state: String): String? {
         val res = engine.request("GET", "$STRAVA_BACKEND_URL/api/config", emptyMap(), null)
         if (!res.isSuccess || res.body == null) {
             Log.w(TAG, "Config fetch failed: ${res.statusCode} ${res.body}")
@@ -44,12 +47,20 @@ class StravaClient(
             "&response_type=code" +
             "&redirect_uri=${enc(REDIRECT_URI)}" +
             "&approval_prompt=auto" +
-            "&scope=activity:read,activity:write"
+            "&scope=activity:read,activity:write" +
+            "&state=${enc(state)}"
     }
 
-    /** Exchanges the OAuth code for tokens via the backend (which holds the secret). */
-    suspend fun exchangeCode(code: String): Boolean {
-        val token = postToken(TokenRequest(grant_type = "authorization_code", code = code)) ?: return false
+    /**
+     * Polls the backend for tokens deposited after the phone-side authorization for [state].
+     * Returns true (and saves them) once they're ready; false while still waiting.
+     */
+    suspend fun pollForConnection(state: String): Boolean {
+        val res = engine.request("GET", "$STRAVA_BACKEND_URL/api/poll?state=${enc(state)}", emptyMap(), null)
+        if (res.statusCode == 204 || res.body.isNullOrBlank()) return false
+        if (!res.isSuccess) return false
+        val token = runCatching { json.decodeFromString<TokenResponse>(res.body) }.getOrNull() ?: return false
+        if (token.refresh_token.isNullOrBlank()) return false
         saveTokens(token)
         return true
     }

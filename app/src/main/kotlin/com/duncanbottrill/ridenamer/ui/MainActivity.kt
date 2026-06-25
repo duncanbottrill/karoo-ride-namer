@@ -1,72 +1,17 @@
 package com.duncanbottrill.ridenamer.ui
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.mutableStateOf
 import com.duncanbottrill.ridenamer.data.RideNamerStore
-import com.duncanbottrill.ridenamer.strava.StravaClient
-import com.duncanbottrill.ridenamer.strava.directHttpEngine
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var store: RideNamerStore
-    private val ioScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-
-    // Surfaced to Compose so the OAuth result can be shown.
-    private val statusMessage = mutableStateOf<String?>(null)
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        store = RideNamerStore(applicationContext)
-        handleDeepLink(intent)
+        val store = RideNamerStore(applicationContext)
         setContent {
-            RideNamerApp(
-                store = store,
-                statusMessage = statusMessage,
-                onConnectStrava = ::launchStravaAuth,
-            )
-        }
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        handleDeepLink(intent)
-    }
-
-    /** Opens the Strava authorize page in the browser (one-tap; no credentials to enter). */
-    private fun launchStravaAuth() {
-        statusMessage.value = "Opening Strava…"
-        ioScope.launch {
-            val url = StravaClient(store, directHttpEngine()).authorizeUrl()
-            if (url == null) {
-                statusMessage.value = "Couldn't reach the Strava backend. Check your connection and try again."
-                return@launch
-            }
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-        }
-    }
-
-    /** Captures the ?code=... from the ridenamer://strava-callback redirect. */
-    private fun handleDeepLink(intent: Intent?) {
-        val data = intent?.data ?: return
-        if (data.scheme != "ridenamer") return
-        val error = data.getQueryParameter("error")
-        if (error != null) {
-            statusMessage.value = "Strava authorization failed: $error"
-            return
-        }
-        val code = data.getQueryParameter("code") ?: return
-        statusMessage.value = "Connecting to Strava…"
-        ioScope.launch {
-            val ok = StravaClient(store, directHttpEngine()).exchangeCode(code)
-            statusMessage.value = if (ok) "Strava connected ✓" else "Couldn't connect to Strava — check your Client ID/Secret."
+            RideNamerApp(store)
         }
     }
 }
