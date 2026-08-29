@@ -138,7 +138,7 @@ private fun StyleCard(current: NameStyle, onSelect: (NameStyle) -> Unit) {
 @Composable
 private fun DemoCard(style: NameStyle) {
     var seed by remember { mutableStateOf(System.nanoTime()) }
-    val sample = remember(style, seed) { generateRideName(SAMPLE_RIDE_STATS, style, seed) }
+    val sample = remember(style, seed) { generateRideName(SAMPLE_RIDE_STATS, style, seed = seed) }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Sample", style = MaterialTheme.typography.labelMedium, color = Accent)
