@@ -36,6 +36,7 @@ import com.duncanbottrill.ridenamer.data.HistoryEntry
 import com.duncanbottrill.ridenamer.data.RideNamerStore
 import com.duncanbottrill.ridenamer.data.StravaCredentials
 import com.duncanbottrill.ridenamer.data.StravaStatus
+import com.duncanbottrill.ridenamer.name.MinimalNameGenerator
 import com.duncanbottrill.ridenamer.name.NameStyle
 import com.duncanbottrill.ridenamer.name.SAMPLE_RIDE_STATS
 import com.duncanbottrill.ridenamer.name.generateRideName
@@ -62,6 +63,8 @@ fun RideNamerApp(
             Scaffold { padding ->
                 val history by store.history.collectAsState(initial = emptyList())
                 val style by store.nameStyle.collectAsState(initial = NameStyle.FUNNY)
+                val wordCount by store.minimalWordCount
+                    .collectAsState(initial = MinimalNameGenerator.DEFAULT_WORDS)
                 val scope = rememberCoroutineScope()
 
                 LazyColumn(
@@ -70,11 +73,18 @@ fun RideNamerApp(
                 ) {
                     item { Header() }
                     item {
-                        StyleCard(current = style, onSelect = { picked ->
-                            scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
-                        })
+                        StyleCard(
+                            current = style,
+                            wordCount = wordCount,
+                            onSelect = { picked ->
+                                scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
+                            },
+                            onWordCount = { count ->
+                                scope.launch(Dispatchers.IO) { store.setMinimalWordCount(count) }
+                            },
+                        )
                     }
-                    item { DemoCard(style) }
+                    item { DemoCard(style, wordCount) }
                     item { StravaCard(store) }
                     item {
                         Text(
@@ -113,7 +123,12 @@ private fun Header() {
 }
 
 @Composable
-private fun StyleCard(current: NameStyle, onSelect: (NameStyle) -> Unit) {
+private fun StyleCard(
+    current: NameStyle,
+    wordCount: Int,
+    onSelect: (NameStyle) -> Unit,
+    onWordCount: (Int) -> Unit,
+) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Name style", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -131,14 +146,32 @@ private fun StyleCard(current: NameStyle, onSelect: (NameStyle) -> Unit) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            if (current == NameStyle.MINIMAL) {
+                Text("How many words?", style = MaterialTheme.typography.labelMedium, color = Accent)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    (MinimalNameGenerator.MIN_WORDS..MinimalNameGenerator.MAX_WORDS).forEach { count ->
+                        val modifier = Modifier.weight(1f)
+                        if (count == wordCount) {
+                            Button(onClick = { onWordCount(count) }, modifier = modifier) { Text("$count") }
+                        } else {
+                            OutlinedButton(onClick = { onWordCount(count) }, modifier = modifier) { Text("$count") }
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun DemoCard(style: NameStyle) {
+private fun DemoCard(style: NameStyle, wordCount: Int) {
     var seed by remember { mutableStateOf(System.nanoTime()) }
-    val sample = remember(style, seed) { generateRideName(SAMPLE_RIDE_STATS, style, seed = seed) }
+    val sample = remember(style, wordCount, seed) {
+        generateRideName(SAMPLE_RIDE_STATS, style, wordCount, seed)
+    }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Sample", style = MaterialTheme.typography.labelMedium, color = Accent)
