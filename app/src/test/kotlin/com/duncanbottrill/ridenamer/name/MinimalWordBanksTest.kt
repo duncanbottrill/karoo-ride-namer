@@ -8,6 +8,28 @@ import org.junit.Test
 
 class MinimalWordBanksTest {
 
+    /**
+     * The colour slot may only use words from this list. Adding a colour to a bank means
+     * adding it here too — deliberately annoying, so the slot stays what it claims to be.
+     */
+    private val allowedColours = setOf(
+        // Metals, stones and greys
+        "pewter", "silver", "zinc", "steel", "dove", "slate", "gunmetal", "graphite",
+        "lead", "charcoal", "ash", "smoke", "putty", "oyster", "chalk",
+        // Warm and earthy
+        "amber", "ochre", "brass", "ember", "terracotta", "gold", "wheat", "lemon",
+        "straw", "honey", "sand", "umber", "rust", "copper", "sienna",
+        // Whites and pales
+        "frost", "ivory", "milk", "pearl", "bone", "alabaster", "linen", "porcelain",
+        "ice", "eggshell",
+        // Greens
+        "moss", "sage", "verdigris", "mint", "drab",
+        // Blues and purples
+        "cyan", "periwinkle", "azure", "cobalt", "cerulean", "indigo", "navy",
+        // Pinks and darks
+        "rose", "blush", "coral", "peach", "ink", "bruise", "sable", "obsidian", "onyx",
+        )
+
     /** Every colour bank reachable through the public API, including the null-temp case. */
     private fun allColourBanks(): List<List<String>> {
         val temps: List<TempBand?> = TempBand.entries + listOf(null)
@@ -63,12 +85,38 @@ class MinimalWordBanksTest {
     }
 
     @Test
-    fun `colour words never collide with time words`() {
-        // Guards against "Midnight Midnight Crawl". The generator also re-draws, but the
-        // banks should not rely on that.
-        val colours = allColourBanks().flatten().map { it.lowercase() }.toSet()
-        val times = MinimalWordBanks.times.values.flatten().map { it.lowercase() }.toSet()
-        val overlap = colours intersect times
-        assertTrue("colour and time banks overlap: $overlap", overlap.isEmpty())
+    fun `no word is shared between two slots`() {
+        // Guards against "Midnight Midnight Crawl" and "Storm Storm". The generator also
+        // re-draws the colour, but only against the time word — the banks must not rely
+        // on that for the other two pairs.
+        val colours = lowercased(allColourBanks())
+        val times = lowercased(MinimalWordBanks.times.values)
+        val speeds = lowercased(MinimalWordBanks.speeds.values)
+        assertTrue("colour/time overlap: ${colours intersect times}", (colours intersect times).isEmpty())
+        assertTrue("colour/speed overlap: ${colours intersect speeds}", (colours intersect speeds).isEmpty())
+        assertTrue("time/speed overlap: ${times intersect speeds}", (times intersect speeds).isEmpty())
     }
+
+    @Test
+    fun `every colour word is actually a colour`() {
+        // The spec calls this slot "a colour relating to the weather". Nothing else in this
+        // file stops a plausible-sounding weather noun ("Storm", "Shroud", "Glacier") being
+        // added to a colour bank, where it reads as a second weather word rather than a
+        // colour. Adding a colour means adding it here too — deliberately annoying, so the
+        // slot stays what it claims to be.
+        val used = lowercased(allColourBanks())
+        val notColours = used - allowedColours
+        assertTrue("not colour names: $notColours", notColours.isEmpty())
+    }
+
+    @Test
+    fun `the colour allow-list has no dead entries`() {
+        // Keeps the allow-list honest in the other direction: an entry left behind after a
+        // word is removed from a bank would quietly widen what the test permits.
+        val unused = allowedColours - lowercased(allColourBanks())
+        assertTrue("allow-list entries used by no bank: $unused", unused.isEmpty())
+    }
+
+    private fun lowercased(banks: Collection<List<String>>): Set<String> =
+        banks.flatten().map { it.lowercase() }.toSet()
 }
