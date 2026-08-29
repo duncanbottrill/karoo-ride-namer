@@ -33,10 +33,10 @@ The app is a Karoo extension (a background Android service built on the
    offline), classifies the ride into buckets (how long / hilly / hard / hot / windy / what
    time of day / where), and runs the **offline name generator**. Three styles are available
    (pick one in the app): **Funny** — silly, random names from curated word banks
-   (*”Tour de Snowdonia”*); **Descriptive** — a plain summary of place, distance, effort
-   and weather (*”Morning hard 64 km hilly ride around Box Hill in the rain”*); and
+   (*“Tour de Snowdonia”*); **Descriptive** — a plain summary of place, distance, effort
+   and weather (*“Morning hard 64 km hilly ride around Box Hill in the rain”*); and
    **Minimal** — one to three single words drawn from the weather's colour, the time of day
-   and your pace (*”Slate Midnight Crawl”*), with the word count your choice and the colour
+   and your pace (*“Slate Midnight Crawl”*), with the word count your choice and the colour
    always kept. The generator uses no network or AI.
 4. **Shows a notification** with the name, saves it to the in-app **history**, and — if
    Strava is connected — **queues a rename** that's applied once the Karoo uploads the
