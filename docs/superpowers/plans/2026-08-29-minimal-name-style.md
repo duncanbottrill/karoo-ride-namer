@@ -1052,15 +1052,39 @@ Fix, commit, push, re-watch.
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Check how styles are described**
+- [ ] **Step 1: Update the styles paragraph**
 
-```bash
-cd ~/github/karoo-ride-namer && grep -n -i "funny\|descriptive\|style" README.md
+`README.md` describes the styles in the numbered "how it works" list, at line 34. Replace:
+
+```
+   time of day / where), and runs the **offline name generator**. Two styles are available
+   (pick one in the app): **Funny** — silly, random names from curated word banks
+   (*"Tour de Snowdonia"*); and **Descriptive** — a plain summary of place, distance, effort
+   and weather (*"Morning hard 64 km hilly ride around Box Hill in the rain"*). The generator
+   uses no network or AI.
 ```
 
-- [ ] **Step 2: Document the new style**
+with:
 
-Add Minimal wherever the other two styles are listed, matching the surrounding tone and formatting. Cover: what it produces, that the user picks 1–3 words, that the default is 3, and give a worked example such as `Slate Midnight Crawl`. If the README does not list the styles at all, skip this task and say so rather than inventing a section.
+```
+   time of day / where), and runs the **offline name generator**. Three styles are available
+   (pick one in the app): **Funny** — silly, random names from curated word banks
+   (*"Tour de Snowdonia"*); **Descriptive** — a plain summary of place, distance, effort
+   and weather (*"Morning hard 64 km hilly ride around Box Hill in the rain"*); and
+   **Minimal** — one to three single words drawn from the weather's colour, the time of day
+   and your pace (*"Slate Midnight Crawl"*), with the word count your choice and the colour
+   always kept. The generator uses no network or AI.
+```
+
+Note the README uses curly quotes (`"` / `"`) around examples — match them.
+
+- [ ] **Step 2: Check nothing else counts the styles**
+
+```bash
+cd ~/github/karoo-ride-namer && grep -rn -i "two styles\|both styles" README.md docs/
+```
+
+Expected: no hits after the edit above. If any turn up, update them too.
 
 - [ ] **Step 3: Commit and push**
 
