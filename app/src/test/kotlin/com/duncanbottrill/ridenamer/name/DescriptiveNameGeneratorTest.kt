@@ -52,4 +52,24 @@ class DescriptiveNameGeneratorTest {
         assertEquals(RideNameGenerator.generate(ride, 9L), funny)
         assertEquals(DescriptiveNameGenerator.generate(ride, 9L), descriptive)
     }
+
+    @Test
+    fun `dispatcher routes to the minimal style with its word count`() {
+        assertEquals(
+            MinimalNameGenerator.generate(ride, 2, 9L),
+            generateRideName(ride, NameStyle.MINIMAL, wordCount = 2, seed = 9L),
+        )
+    }
+
+    @Test
+    fun `word count is ignored by the other styles`() {
+        assertEquals(
+            generateRideName(ride, NameStyle.FUNNY, wordCount = 1, seed = 4L),
+            generateRideName(ride, NameStyle.FUNNY, wordCount = 3, seed = 4L),
+        )
+        assertEquals(
+            generateRideName(ride, NameStyle.DESCRIPTIVE, wordCount = 1, seed = 4L),
+            generateRideName(ride, NameStyle.DESCRIPTIVE, wordCount = 3, seed = 4L),
+        )
+    }
 }

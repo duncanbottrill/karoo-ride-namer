@@ -11,6 +11,7 @@ enum class ClimbBand { FLAT, ROLLING, HILLY, MOUNTAINOUS }
 enum class IntensityBand { CHILL, STEADY, HARD, SAVAGE }
 enum class TempBand { FREEZING, COLD, MILD, WARM, SCORCHING }
 enum class TimeBand { DAWN, MORNING, MIDDAY, AFTERNOON, EVENING, NIGHT }
+enum class SpeedBand { CRAWL, AMBLE, CRUISE, SWIFT, FLYING }
 
 /**
  * Turns raw [RideStats] into the handful of categorical signals the templates use.
@@ -25,6 +26,7 @@ data class RideClassification(
     val windy: Boolean,
     val time: TimeBand,
     val fast: Boolean,
+    val speed: SpeedBand,
 ) {
     companion object {
         fun of(stats: RideStats, zone: ZoneId = ZoneId.systemDefault()): RideClassification {
@@ -68,18 +70,33 @@ data class RideClassification(
             }
 
             // "Fast" is relative to terrain: 28+ on the flat, less if it was a climb-fest.
-            val fastThreshold = when (climb) {
-                ClimbBand.MOUNTAINOUS -> 20.0
-                ClimbBand.HILLY -> 24.0
-                ClimbBand.ROLLING -> 27.0
-                ClimbBand.FLAT -> 30.0
-            }
+            val fastThreshold = fastThresholdFor(climb)
             val fast = stats.avgSpeedKmh >= fastThreshold
+            val speed = classifySpeed(stats.avgSpeedKmh, fastThreshold)
 
             return RideClassification(
                 distance, climb, intensity, temp,
-                stats.weather?.condition, windy, time, fast,
+                stats.weather?.condition, windy, time, fast, speed,
             )
+        }
+
+        private fun fastThresholdFor(climb: ClimbBand): Double = when (climb) {
+            ClimbBand.MOUNTAINOUS -> 20.0
+            ClimbBand.HILLY -> 24.0
+            ClimbBand.ROLLING -> 27.0
+            ClimbBand.FLAT -> 30.0
+        }
+
+        /** Where the ride sat relative to "fast for this terrain" — 1.0 is exactly on the threshold. */
+        private fun classifySpeed(avgSpeedKmh: Double, fastThreshold: Double): SpeedBand {
+            val ratio = avgSpeedKmh / fastThreshold
+            return when {
+                ratio < 0.65 -> SpeedBand.CRAWL
+                ratio < 0.85 -> SpeedBand.AMBLE
+                ratio < 1.00 -> SpeedBand.CRUISE
+                ratio < 1.15 -> SpeedBand.SWIFT
+                else -> SpeedBand.FLYING
+            }
         }
 
         private fun classifyIntensity(stats: RideStats): IntensityBand {
