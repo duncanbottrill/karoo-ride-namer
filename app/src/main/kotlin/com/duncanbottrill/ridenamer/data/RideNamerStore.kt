@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.duncanbottrill.ridenamer.name.MinimalNameGenerator
 import com.duncanbottrill.ridenamer.name.NameStyle
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,6 +29,7 @@ class RideNamerStore(private val context: Context) {
     private val keyPending = stringPreferencesKey("pending_renames")
     private val keyStrava = stringPreferencesKey("strava_credentials")
     private val keyNameStyle = stringPreferencesKey("name_style")
+    private val keyMinimalWordCount = intPreferencesKey("minimal_word_count")
 
     // --- Name style ---
 
@@ -37,6 +40,21 @@ class RideNamerStore(private val context: Context) {
     suspend fun setNameStyle(style: NameStyle) {
         context.dataStore.edit { it[keyNameStyle] = style.name }
     }
+
+    /**
+     * How many words the Minimal style uses. Clamped on read as well as write so a value
+     * written by an older or buggier build can't break naming at the end of a ride.
+     */
+    val minimalWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[keyMinimalWordCount] ?: MinimalNameGenerator.DEFAULT_WORDS).clampWords()
+    }
+
+    suspend fun setMinimalWordCount(count: Int) {
+        context.dataStore.edit { it[keyMinimalWordCount] = count.clampWords() }
+    }
+
+    private fun Int.clampWords() =
+        coerceIn(MinimalNameGenerator.MIN_WORDS, MinimalNameGenerator.MAX_WORDS)
 
     // --- History ---
 
