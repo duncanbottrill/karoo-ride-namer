@@ -23,6 +23,8 @@ object MinimalNameGenerator {
         val words = wordCount.coerceIn(MIN_WORDS, MAX_WORDS)
         val c = RideClassification.of(stats)
 
+        // all three words are drawn unconditionally, so a given seed produces
+        // the same colour regardless of the chosen word count.
         val timeWord = MinimalWordBanks.times.getValue(c.time).random(rng)
         // No weather (or a WMO code we don't recognise) falls back to the sky's colour at
         // that hour, so the user's chosen word count is honoured either way.

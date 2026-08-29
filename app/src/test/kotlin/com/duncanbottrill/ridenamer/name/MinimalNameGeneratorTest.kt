@@ -112,4 +112,9 @@ class MinimalNameGeneratorTest {
             }
         }
     }
+
+    @Test
+    fun `the default word count is three`() {
+        assertEquals(3, words(MinimalNameGenerator.generate(ride)).size)
+    }
 }
