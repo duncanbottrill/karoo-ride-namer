@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.duncanbottrill.ridenamer.name.MinimalNameGenerator
 import com.duncanbottrill.ridenamer.name.NameStyle
+import com.duncanbottrill.ridenamer.name.WordCount
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -30,6 +30,7 @@ class RideNamerStore(private val context: Context) {
     private val keyStrava = stringPreferencesKey("strava_credentials")
     private val keyNameStyle = stringPreferencesKey("name_style")
     private val keyMinimalWordCount = intPreferencesKey("minimal_word_count")
+    private val keyRandomWordCount = intPreferencesKey("random_word_count")
 
     // --- Name style ---
 
@@ -42,19 +43,28 @@ class RideNamerStore(private val context: Context) {
     }
 
     /**
-     * How many words the Minimal style uses. Clamped on read as well as write so a value
-     * written by an older or buggier build can't break naming at the end of a ride.
+     * How many words a style uses, for the styles that let the user choose. Each style keeps
+     * its own count, so changing one doesn't quietly change another.
+     *
+     * [wordCountKey] is the single place that maps a style to its preference; both the read
+     * and the write go through it, so a new style cannot end up reading one count and writing
+     * another. Styles without a word count share Minimal's slot and simply ignore the value.
      */
-    val minimalWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
-        (prefs[keyMinimalWordCount] ?: MinimalNameGenerator.DEFAULT_WORDS).clampWords()
+    fun wordCountFor(style: NameStyle): Flow<Int> {
+        val key = wordCountKey(style)
+        return context.dataStore.data.map { prefs -> (prefs[key] ?: WordCount.DEFAULT).clampWords() }
     }
 
-    suspend fun setMinimalWordCount(count: Int) {
-        context.dataStore.edit { it[keyMinimalWordCount] = count.clampWords() }
+    suspend fun setWordCountFor(style: NameStyle, count: Int) {
+        context.dataStore.edit { it[wordCountKey(style)] = count.clampWords() }
     }
 
-    private fun Int.clampWords() =
-        coerceIn(MinimalNameGenerator.MIN_WORDS, MinimalNameGenerator.MAX_WORDS)
+    private fun wordCountKey(style: NameStyle) = when (style) {
+        NameStyle.RANDOM -> keyRandomWordCount
+        else -> keyMinimalWordCount
+    }
+
+    private fun Int.clampWords() = coerceIn(WordCount.MIN, WordCount.MAX)
 
     // --- History ---
 
