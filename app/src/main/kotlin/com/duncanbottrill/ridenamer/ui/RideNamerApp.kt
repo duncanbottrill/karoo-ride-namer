@@ -82,10 +82,9 @@ fun RideNamerApp(
                                 scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
                             },
                             onWordCount = { count ->
-                                scope.launch(Dispatchers.IO) {
-                                    if (style == NameStyle.RANDOM) store.setRandomWordCount(count)
-                                    else store.setMinimalWordCount(count)
-                                }
+                                // Attributed to the style the selector was drawn for, so a
+                                // tap can never land on the count of a different style.
+                                scope.launch(Dispatchers.IO) { store.setWordCountFor(style, count) }
                             },
                         )
                     }

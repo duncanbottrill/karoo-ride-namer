@@ -43,33 +43,25 @@ class RideNamerStore(private val context: Context) {
     }
 
     /**
-     * How many words the Minimal style uses. Clamped on read as well as write so a value
-     * written by an older or buggier build can't break naming at the end of a ride.
+     * How many words a style uses, for the styles that let the user choose. Each style keeps
+     * its own count, so changing one doesn't quietly change another.
+     *
+     * [wordCountKey] is the single place that maps a style to its preference; both the read
+     * and the write go through it, so a new style cannot end up reading one count and writing
+     * another. Styles without a word count share Minimal's slot and simply ignore the value.
      */
-    val minimalWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
-        (prefs[keyMinimalWordCount] ?: WordCount.DEFAULT).clampWords()
+    fun wordCountFor(style: NameStyle): Flow<Int> {
+        val key = wordCountKey(style)
+        return context.dataStore.data.map { prefs -> (prefs[key] ?: WordCount.DEFAULT).clampWords() }
     }
 
-    suspend fun setMinimalWordCount(count: Int) {
-        context.dataStore.edit { it[keyMinimalWordCount] = count.clampWords() }
+    suspend fun setWordCountFor(style: NameStyle, count: Int) {
+        context.dataStore.edit { it[wordCountKey(style)] = count.clampWords() }
     }
 
-    /**
-     * How many words the Random style uses. Kept separate from [minimalWordCount] so
-     * changing one style's count doesn't quietly change the other's.
-     */
-    val randomWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
-        (prefs[keyRandomWordCount] ?: WordCount.DEFAULT).clampWords()
-    }
-
-    suspend fun setRandomWordCount(count: Int) {
-        context.dataStore.edit { it[keyRandomWordCount] = count.clampWords() }
-    }
-
-    /** The word count that applies to [style] — the styles that ignore it get the default. */
-    fun wordCountFor(style: NameStyle): Flow<Int> = when (style) {
-        NameStyle.RANDOM -> randomWordCount
-        else -> minimalWordCount
+    private fun wordCountKey(style: NameStyle) = when (style) {
+        NameStyle.RANDOM -> keyRandomWordCount
+        else -> keyMinimalWordCount
     }
 
     private fun Int.clampWords() = coerceIn(WordCount.MIN, WordCount.MAX)
