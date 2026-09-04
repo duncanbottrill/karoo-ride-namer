@@ -62,6 +62,32 @@ class DescriptiveNameGeneratorTest {
     }
 
     @Test
+    fun `dispatcher routes to the random style with its word count`() {
+        assertEquals(
+            RandomNameGenerator.generate(2, 9L),
+            generateRideName(ride, NameStyle.RANDOM, wordCount = 2, seed = 9L),
+        )
+    }
+
+    @Test
+    fun `the random style ignores the ride`() {
+        // Random is the only style whose output must not depend on the ride at all.
+        val elsewhere = ride.copy(placeName = "Alpe d'Huez", distanceKm = 200.0, weather = null)
+        assertEquals(
+            generateRideName(ride, NameStyle.RANDOM, wordCount = 3, seed = 11L),
+            generateRideName(elsewhere, NameStyle.RANDOM, wordCount = 3, seed = 11L),
+        )
+    }
+
+    @Test
+    fun `only the word count styles advertise a word count`() {
+        assertEquals(
+            setOf(NameStyle.MINIMAL, NameStyle.RANDOM),
+            NameStyle.entries.filter { it.hasWordCount }.toSet(),
+        )
+    }
+
+    @Test
     fun `word count is ignored by the other styles`() {
         assertEquals(
             generateRideName(ride, NameStyle.FUNNY, wordCount = 1, seed = 4L),

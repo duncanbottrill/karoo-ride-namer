@@ -7,8 +7,8 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.duncanbottrill.ridenamer.name.MinimalNameGenerator
 import com.duncanbottrill.ridenamer.name.NameStyle
+import com.duncanbottrill.ridenamer.name.WordCount
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.encodeToString
@@ -30,6 +30,7 @@ class RideNamerStore(private val context: Context) {
     private val keyStrava = stringPreferencesKey("strava_credentials")
     private val keyNameStyle = stringPreferencesKey("name_style")
     private val keyMinimalWordCount = intPreferencesKey("minimal_word_count")
+    private val keyRandomWordCount = intPreferencesKey("random_word_count")
 
     // --- Name style ---
 
@@ -46,15 +47,32 @@ class RideNamerStore(private val context: Context) {
      * written by an older or buggier build can't break naming at the end of a ride.
      */
     val minimalWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
-        (prefs[keyMinimalWordCount] ?: MinimalNameGenerator.DEFAULT_WORDS).clampWords()
+        (prefs[keyMinimalWordCount] ?: WordCount.DEFAULT).clampWords()
     }
 
     suspend fun setMinimalWordCount(count: Int) {
         context.dataStore.edit { it[keyMinimalWordCount] = count.clampWords() }
     }
 
-    private fun Int.clampWords() =
-        coerceIn(MinimalNameGenerator.MIN_WORDS, MinimalNameGenerator.MAX_WORDS)
+    /**
+     * How many words the Random style uses. Kept separate from [minimalWordCount] so
+     * changing one style's count doesn't quietly change the other's.
+     */
+    val randomWordCount: Flow<Int> = context.dataStore.data.map { prefs ->
+        (prefs[keyRandomWordCount] ?: WordCount.DEFAULT).clampWords()
+    }
+
+    suspend fun setRandomWordCount(count: Int) {
+        context.dataStore.edit { it[keyRandomWordCount] = count.clampWords() }
+    }
+
+    /** The word count that applies to [style] — the styles that ignore it get the default. */
+    fun wordCountFor(style: NameStyle): Flow<Int> = when (style) {
+        NameStyle.RANDOM -> randomWordCount
+        else -> minimalWordCount
+    }
+
+    private fun Int.clampWords() = coerceIn(WordCount.MIN, WordCount.MAX)
 
     // --- History ---
 

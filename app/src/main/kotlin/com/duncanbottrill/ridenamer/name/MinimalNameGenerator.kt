@@ -14,9 +14,9 @@ import kotlin.random.Random
  */
 object MinimalNameGenerator {
 
-    const val MIN_WORDS = 1
-    const val MAX_WORDS = 3
-    const val DEFAULT_WORDS = 3
+    const val MIN_WORDS = WordCount.MIN
+    const val MAX_WORDS = WordCount.MAX
+    const val DEFAULT_WORDS = WordCount.DEFAULT
 
     fun generate(stats: RideStats, wordCount: Int = DEFAULT_WORDS, seed: Long? = null): String {
         val rng = if (seed != null) Random(seed) else Random.Default

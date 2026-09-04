@@ -12,8 +12,9 @@ import com.duncanbottrill.ridenamer.model.WeatherCondition
  *     "1, 2 or 3 words" choice literally true.
  *  2. No word appears in two different slots' banks, or a name could read
  *     "Midnight Midnight Crawl".
- *  3. Colour words are actual colour names. "Storm" and "Shroud" are weather, not colours,
- *     and reading one in the colour slot just looks like a second weather word.
+ *  3. Colour words are plain, everyday colour names — the ones a person names when asked
+ *     to name a colour. "Putty" and "Verdigris" are colours in a paint catalogue, but in a
+ *     ride name they read as a material rather than a colour.
  */
 object MinimalWordBanks {
 
@@ -25,19 +26,19 @@ object MinimalWordBanks {
      */
     fun colours(condition: WeatherCondition, temp: TempBand?): List<String>? = when (condition) {
         WeatherCondition.CLEAR -> when (temp) {
-            TempBand.FREEZING, TempBand.COLD -> listOf("Frost", "Pewter", "Silver", "Ivory")
-            TempBand.WARM, TempBand.SCORCHING -> listOf("Amber", "Ochre", "Brass", "Ember", "Terracotta")
-            TempBand.MILD, null -> listOf("Gold", "Wheat", "Lemon", "Straw")
+            TempBand.FREEZING, TempBand.COLD -> listOf("Blue", "White", "Silver")
+            TempBand.WARM, TempBand.SCORCHING -> listOf("Orange", "Red", "Gold")
+            TempBand.MILD, null -> listOf("Yellow", "Gold", "Blue")
         }
         WeatherCondition.CLOUDY -> when (temp) {
-            TempBand.FREEZING, TempBand.COLD -> listOf("Zinc", "Steel", "Dove")
-            else -> listOf("Pewter", "Putty", "Oyster", "Chalk")
+            TempBand.FREEZING, TempBand.COLD -> listOf("Grey", "Silver", "Blue")
+            else -> listOf("Grey", "White", "Brown")
         }
-        WeatherCondition.FOG -> listOf("Ash", "Smoke", "Milk", "Pearl")
-        WeatherCondition.DRIZZLE -> listOf("Drab", "Moss", "Sage", "Verdigris")
-        WeatherCondition.RAIN -> listOf("Slate", "Gunmetal", "Graphite", "Lead")
-        WeatherCondition.SNOW -> listOf("Bone", "Alabaster", "Ice", "Linen", "Porcelain")
-        WeatherCondition.THUNDER -> listOf("Ink", "Bruise", "Charcoal", "Sable")
+        WeatherCondition.FOG -> listOf("Grey", "White", "Silver")
+        WeatherCondition.DRIZZLE -> listOf("Green", "Grey", "Brown")
+        WeatherCondition.RAIN -> listOf("Grey", "Blue", "Black")
+        WeatherCondition.SNOW -> listOf("White", "Silver", "Blue")
+        WeatherCondition.THUNDER -> listOf("Black", "Purple", "Grey")
         WeatherCondition.UNKNOWN -> null
     }
 
@@ -47,12 +48,12 @@ object MinimalWordBanks {
      * [times].
      */
     val skyColours: Map<TimeBand, List<String>> = mapOf(
-        TimeBand.DAWN to listOf("Rose", "Blush", "Coral", "Peach"),
-        TimeBand.MORNING to listOf("Cyan", "Periwinkle", "Mint", "Eggshell"),
-        TimeBand.MIDDAY to listOf("Azure", "Cobalt", "Cerulean"),
-        TimeBand.AFTERNOON to listOf("Gold", "Wheat", "Sand", "Honey"),
-        TimeBand.EVENING to listOf("Umber", "Rust", "Copper", "Sienna"),
-        TimeBand.NIGHT to listOf("Indigo", "Obsidian", "Onyx", "Navy"),
+        TimeBand.DAWN to listOf("Pink", "Orange", "Red"),
+        TimeBand.MORNING to listOf("Blue", "Green", "White"),
+        TimeBand.MIDDAY to listOf("Blue", "Gold", "White"),
+        TimeBand.AFTERNOON to listOf("Gold", "Yellow", "Orange"),
+        TimeBand.EVENING to listOf("Orange", "Red", "Purple"),
+        TimeBand.NIGHT to listOf("Black", "Blue", "Purple"),
     )
 
     val times: Map<TimeBand, List<String>> = mapOf(

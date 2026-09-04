@@ -15,8 +15,8 @@ android {
         applicationId = "com.duncanbottrill.ridenamer"
         minSdk = 26
         targetSdk = 35
-        versionCode = 11
-        versionName = "1.10"
+        versionCode = 12
+        versionName = "1.11"
     }
 
     // Stable release signing from CI secrets, so every release shares one signing identity

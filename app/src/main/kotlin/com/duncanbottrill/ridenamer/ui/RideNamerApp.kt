@@ -36,7 +36,7 @@ import com.duncanbottrill.ridenamer.data.HistoryEntry
 import com.duncanbottrill.ridenamer.data.RideNamerStore
 import com.duncanbottrill.ridenamer.data.StravaCredentials
 import com.duncanbottrill.ridenamer.data.StravaStatus
-import com.duncanbottrill.ridenamer.name.MinimalNameGenerator
+import com.duncanbottrill.ridenamer.name.WordCount
 import com.duncanbottrill.ridenamer.name.NameStyle
 import com.duncanbottrill.ridenamer.name.SAMPLE_RIDE_STATS
 import com.duncanbottrill.ridenamer.name.generateRideName
@@ -63,8 +63,10 @@ fun RideNamerApp(
             Scaffold { padding ->
                 val history by store.history.collectAsState(initial = emptyList())
                 val style by store.nameStyle.collectAsState(initial = NameStyle.FUNNY)
-                val wordCount by store.minimalWordCount
-                    .collectAsState(initial = MinimalNameGenerator.DEFAULT_WORDS)
+                // Each style that offers a word count keeps its own, so switching styles
+                // shows the count that style was left on.
+                val wordCount by store.wordCountFor(style)
+                    .collectAsState(initial = WordCount.DEFAULT)
                 val scope = rememberCoroutineScope()
 
                 LazyColumn(
@@ -80,7 +82,10 @@ fun RideNamerApp(
                                 scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
                             },
                             onWordCount = { count ->
-                                scope.launch(Dispatchers.IO) { store.setMinimalWordCount(count) }
+                                scope.launch(Dispatchers.IO) {
+                                    if (style == NameStyle.RANDOM) store.setRandomWordCount(count)
+                                    else store.setMinimalWordCount(count)
+                                }
                             },
                         )
                     }
@@ -146,13 +151,13 @@ private fun StyleCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            if (current == NameStyle.MINIMAL) {
+            if (current.hasWordCount) {
                 Text("How many words?", style = MaterialTheme.typography.labelMedium, color = Accent)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    (MinimalNameGenerator.MIN_WORDS..MinimalNameGenerator.MAX_WORDS).forEach { count ->
+                    (WordCount.MIN..WordCount.MAX).forEach { count ->
                         val modifier = Modifier.weight(1f)
                         if (count == wordCount) {
                             Button(onClick = { onWordCount(count) }, modifier = modifier) { Text("$count") }
