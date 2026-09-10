@@ -25,7 +25,10 @@ class RandomWordBanksTest {
 
     @Test
     fun `the pool is big enough to be worth calling random`() {
-        // Three words drawn from fewer than this and repeats across rides get obvious.
-        assertTrue("pool is only ${RandomWordBanks.words.size} words", RandomWordBanks.words.size >= 60)
+        // A one-word name draws from this list directly, so the pool size IS the number of
+        // possible names and repeats arrive around its square root. At 121 words a one-word
+        // name repeated every ~13 rides, which is what prompted this floor. 500 puts that
+        // at ~27 rides; don't let the pool shrink back under it.
+        assertTrue("pool is only ${RandomWordBanks.words.size} words", RandomWordBanks.words.size >= 500)
     }
 }
