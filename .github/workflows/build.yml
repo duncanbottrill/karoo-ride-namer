@@ -48,6 +48,7 @@ jobs:
         with:
           name: app-release
           path: app/build/outputs/apk/release/app-release.apk
+          retention-days: 7
 
       # On a version tag (e.g. v1.0), publish the signed APK to a GitHub Release so it
       # can be sideloaded onto the Karoo and updated in place.
