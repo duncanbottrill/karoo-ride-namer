@@ -106,7 +106,8 @@ class RideNamerExtension : KarooExtension("ridenamer", BuildConfig.VERSION_NAME)
         val stats = live.toStats(System.currentTimeMillis())
         val style = store.nameStyle.first()
         val wordCount = store.wordCountFor(style).first()
-        val name = generateRideName(stats, style, wordCount, seed = stats.endEpochMs)
+        val detail = store.descriptiveDetail.first()
+        val name = generateRideName(stats, style, wordCount, detail, seed = stats.endEpochMs)
         Log.i(TAG, "Generated name ($style): $name")
 
         val connected = store.stravaCredentials.first().isConnected

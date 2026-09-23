@@ -9,9 +9,11 @@ enum class NameStyle(
     val blurb: String,
     /** Whether this style lets the user choose 1, 2 or 3 words. Drives the UI selector. */
     val hasWordCount: Boolean = false,
+    /** Whether this style lets the user choose how much detail. Drives the UI selector. */
+    val hasDetail: Boolean = false,
 ) {
     FUNNY("Funny", "Silly, random names for a laugh"),
-    DESCRIPTIVE("Descriptive", "Plain facts: place, distance, effort, weather"),
+    DESCRIPTIVE("Descriptive", "Plain facts: distance, terrain, effort, weather", hasDetail = true),
     MINIMAL("Minimal", "A colour, a time, a pace — in as few words as you like", hasWordCount = true),
     RANDOM("Random", "Pure nonsense: unrelated words, nothing to do with the ride", hasWordCount = true),
     ;
@@ -26,16 +28,18 @@ enum class NameStyle(
  *
  * [wordCount] applies to [NameStyle.MINIMAL] and [NameStyle.RANDOM], which each keep their
  * own stored count — see [com.duncanbottrill.ridenamer.data.RideNamerStore.wordCountFor].
- * The other two styles ignore it.
+ * [detail] applies to [NameStyle.DESCRIPTIVE] only. Styles ignore the settings that are not
+ * theirs.
  */
 fun generateRideName(
     stats: RideStats,
     style: NameStyle,
     wordCount: Int = WordCount.DEFAULT,
+    detail: DescriptiveDetail = DescriptiveDetail.DEFAULT,
     seed: Long? = null,
 ): String = when (style) {
     NameStyle.FUNNY -> RideNameGenerator.generate(stats, seed)
-    NameStyle.DESCRIPTIVE -> DescriptiveNameGenerator.generate(stats, seed)
+    NameStyle.DESCRIPTIVE -> DescriptiveNameGenerator.generate(stats, detail, seed)
     NameStyle.MINIMAL -> MinimalNameGenerator.generate(stats, wordCount, seed)
     // Random ignores the ride entirely — that's the point of it.
     NameStyle.RANDOM -> RandomNameGenerator.generate(wordCount, seed)
