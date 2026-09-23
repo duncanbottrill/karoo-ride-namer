@@ -36,6 +36,7 @@ import com.duncanbottrill.ridenamer.data.HistoryEntry
 import com.duncanbottrill.ridenamer.data.RideNamerStore
 import com.duncanbottrill.ridenamer.data.StravaCredentials
 import com.duncanbottrill.ridenamer.data.StravaStatus
+import com.duncanbottrill.ridenamer.name.DescriptiveDetail
 import com.duncanbottrill.ridenamer.name.WordCount
 import com.duncanbottrill.ridenamer.name.NameStyle
 import com.duncanbottrill.ridenamer.name.SAMPLE_RIDE_STATS
@@ -67,6 +68,8 @@ fun RideNamerApp(
                 // shows the count that style was left on.
                 val wordCount by store.wordCountFor(style)
                     .collectAsState(initial = WordCount.DEFAULT)
+                val detail by store.descriptiveDetail
+                    .collectAsState(initial = DescriptiveDetail.DEFAULT)
                 val scope = rememberCoroutineScope()
 
                 LazyColumn(
@@ -78,6 +81,7 @@ fun RideNamerApp(
                         StyleCard(
                             current = style,
                             wordCount = wordCount,
+                            detail = detail,
                             onSelect = { picked ->
                                 scope.launch(Dispatchers.IO) { store.setNameStyle(picked) }
                             },
@@ -86,9 +90,12 @@ fun RideNamerApp(
                                 // tap can never land on the count of a different style.
                                 scope.launch(Dispatchers.IO) { store.setWordCountFor(style, count) }
                             },
+                            onDetail = { picked ->
+                                scope.launch(Dispatchers.IO) { store.setDescriptiveDetail(picked) }
+                            },
                         )
                     }
-                    item { DemoCard(style, wordCount) }
+                    item { DemoCard(style, wordCount, detail) }
                     item { StravaCard(store) }
                     item {
                         Text(
@@ -130,8 +137,10 @@ private fun Header() {
 private fun StyleCard(
     current: NameStyle,
     wordCount: Int,
+    detail: DescriptiveDetail,
     onSelect: (NameStyle) -> Unit,
     onWordCount: (Int) -> Unit,
+    onDetail: (DescriptiveDetail) -> Unit,
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -166,15 +175,28 @@ private fun StyleCard(
                     }
                 }
             }
+            if (current.hasDetail) {
+                Text("How much detail?", style = MaterialTheme.typography.labelMedium, color = Accent)
+                // Stacked rather than a row: the labels are too long to read four-across on
+                // the Karoo's screen.
+                DescriptiveDetail.entries.forEach { option ->
+                    val modifier = Modifier.fillMaxWidth()
+                    if (option == detail) {
+                        Button(onClick = { onDetail(option) }, modifier = modifier) { Text(option.label) }
+                    } else {
+                        OutlinedButton(onClick = { onDetail(option) }, modifier = modifier) { Text(option.label) }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun DemoCard(style: NameStyle, wordCount: Int) {
+private fun DemoCard(style: NameStyle, wordCount: Int, detail: DescriptiveDetail) {
     var seed by remember { mutableStateOf(System.nanoTime()) }
-    val sample = remember(style, wordCount, seed) {
-        generateRideName(SAMPLE_RIDE_STATS, style, wordCount, seed)
+    val sample = remember(style, wordCount, detail, seed) {
+        generateRideName(SAMPLE_RIDE_STATS, style, wordCount, detail, seed)
     }
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

@@ -34,7 +34,8 @@ The app is a Karoo extension (a background Android service built on the
    time of day / where), and runs the **offline name generator**. Four styles are available
    (pick one in the app): **Funny** — silly, random names from curated word banks
    (*“Tour de Snowdonia”*); **Descriptive** — a plain summary of place, distance, effort
-   and weather (*“Morning hard 64 km hilly ride around Box Hill in the rain”*);
+   and weather (*“Morning hard 64 km hilly ride around Box Hill in the rain”*), or a compact
+   form you pick in the app (*“61 km hilly”*, *“61 km hilly hard”*, *“61 km hilly sunny”*);
    **Minimal** — one to three single words drawn from the weather's colour, the time of day
    and your pace (*“Grey Midnight Crawl”*), with the word count your choice and the colour
    always kept; and **Random** — one to three unrelated words that ignore the ride entirely

@@ -10,11 +10,18 @@ import kotlin.random.Random
  * and weather — e.g. "Morning hard 64 km hilly ride around Box Hill in the rain" or
  * "Box Hill · 64 km · hilly · hard · wet". The less-funny counterpart to [RideNameGenerator].
  *
+ * [DescriptiveDetail] trims it down: the compact forms drop the place, the time of day and
+ * the sentence scaffolding, leaving "64 km hilly", "64 km hilly hard" or "64 km hilly wet".
+ *
  * Deterministic for a given seed; missing pieces (no place / no weather) are dropped cleanly.
  */
 object DescriptiveNameGenerator {
 
-    fun generate(stats: RideStats, seed: Long? = null): String {
+    fun generate(
+        stats: RideStats,
+        detail: DescriptiveDetail = DescriptiveDetail.DEFAULT,
+        seed: Long? = null,
+    ): String {
         val rng = if (seed != null) Random(seed) else Random.Default
         val c = RideClassification.of(stats)
         val place = stats.placeName?.trim()?.takeIf { it.isNotEmpty() }
@@ -51,7 +58,7 @@ object DescriptiveNameGenerator {
             WeatherCondition.UNKNOWN, null -> null
         }
         val weatherWord = when (c.condition) {
-            WeatherCondition.CLEAR -> "clear"
+            WeatherCondition.CLEAR -> "sunny"
             WeatherCondition.CLOUDY -> "cloudy"
             WeatherCondition.FOG -> "foggy"
             WeatherCondition.DRIZZLE -> "drizzly"
@@ -59,6 +66,20 @@ object DescriptiveNameGenerator {
             WeatherCondition.SNOW -> "snowy"
             WeatherCondition.THUNDER -> "stormy"
             WeatherCondition.UNKNOWN, null -> null
+        }
+
+        // The compact forms are fixed, not drawn from templates — the whole point of asking
+        // for "61 km hilly" is that it comes back the same shape every time.
+        if (detail != DescriptiveDetail.FULL) {
+            val third = when (detail) {
+                DescriptiveDetail.WITH_EFFORT -> intensity
+                // No usable weather leaves the short form as distance + terrain rather than
+                // inventing a condition.
+                DescriptiveDetail.WITH_WEATHER -> weatherWord
+                else -> null
+            }
+            return listOfNotNull(dist, climb, third).joinToString(" ")
+                .replaceFirstChar { it.uppercase() }
         }
 
         val templates = listOf<() -> String>(

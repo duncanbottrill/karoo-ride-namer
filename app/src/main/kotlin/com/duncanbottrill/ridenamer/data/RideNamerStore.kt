@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.duncanbottrill.ridenamer.name.DescriptiveDetail
 import com.duncanbottrill.ridenamer.name.NameStyle
 import com.duncanbottrill.ridenamer.name.WordCount
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +32,7 @@ class RideNamerStore(private val context: Context) {
     private val keyNameStyle = stringPreferencesKey("name_style")
     private val keyMinimalWordCount = intPreferencesKey("minimal_word_count")
     private val keyRandomWordCount = intPreferencesKey("random_word_count")
+    private val keyDescriptiveDetail = stringPreferencesKey("descriptive_detail")
 
     // --- Name style ---
 
@@ -57,6 +59,15 @@ class RideNamerStore(private val context: Context) {
 
     suspend fun setWordCountFor(style: NameStyle, count: Int) {
         context.dataStore.edit { it[wordCountKey(style)] = count.clampWords() }
+    }
+
+    /** How much the Descriptive style says. Defaults to the original full sentences. */
+    val descriptiveDetail: Flow<DescriptiveDetail> = context.dataStore.data.map { prefs ->
+        DescriptiveDetail.fromName(prefs[keyDescriptiveDetail])
+    }
+
+    suspend fun setDescriptiveDetail(detail: DescriptiveDetail) {
+        context.dataStore.edit { it[keyDescriptiveDetail] = detail.name }
     }
 
     private fun wordCountKey(style: NameStyle) = when (style) {

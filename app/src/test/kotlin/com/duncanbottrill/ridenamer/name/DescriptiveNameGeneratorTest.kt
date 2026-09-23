@@ -50,7 +50,7 @@ class DescriptiveNameGeneratorTest {
         val funny = generateRideName(ride, NameStyle.FUNNY, seed = 9L)
         val descriptive = generateRideName(ride, NameStyle.DESCRIPTIVE, seed = 9L)
         assertEquals(RideNameGenerator.generate(ride, 9L), funny)
-        assertEquals(DescriptiveNameGenerator.generate(ride, 9L), descriptive)
+        assertEquals(DescriptiveNameGenerator.generate(ride, seed = 9L), descriptive)
     }
 
     @Test
